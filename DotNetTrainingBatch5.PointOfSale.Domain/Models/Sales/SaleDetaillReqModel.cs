@@ -15,7 +15,7 @@ namespace DotNetTrainingBatch5.PointOfSale.Domain.Models.SaleDetail
 
         public string? SaleCode { get; set; } = "";
 
-        public int ProductQuantity { get; set; } = 0;
+      
 
         public decimal Total { get; set; } = 0M;
 

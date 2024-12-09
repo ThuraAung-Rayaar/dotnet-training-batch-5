@@ -7,8 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Features\Sale\" />
-    <Folder Include="Models\ProductCategory\" />
+    <Compile Remove="Models\ProductCategory\**" />
+    <EmbeddedResource Remove="Models\ProductCategory\**" />
+    <None Remove="Models\ProductCategory\**" />
   </ItemGroup>
 
   <ItemGroup>
