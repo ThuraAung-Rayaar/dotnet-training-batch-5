@@ -54,6 +54,30 @@ var services = new ServiceCollection()
     .BuildServiceProvider();
 
 var adoDotNetExample = services.GetRequiredService<AdoDotNetExample>();
-adoDotNetExample.Read();
-
+//adoDotNetExample.Read();
+string Code = "pp001";
+Code = Code.IncrementCode(2);
+ Code.ToUpper();
+Console.WriteLine(Code);
 Console.ReadKey();
+
+public static class ServiceHelper
+{
+
+    public static string IncrementCode(this string Code,int HexCount)
+    {
+
+
+        string charr = Code.Substring(0, HexCount);
+        string numeric = Code.Substring(HexCount);
+
+
+        int num = int.Parse(numeric) + 1;
+
+        string newCode = num.ToString(new string('0', numeric.Length));
+
+
+        return charr + newCode;
+    }
+}
+

@@ -40,7 +40,7 @@ namespace DotNetTrainingBatch5.PointOfSale.Domain
                 Message = message
             };
         }
-        public static Result<T> ValidationError(string message, T? data = default)
+        public static Result<T> ValidationError(string message = "Data Validation Error Occur", T? data = default)
         {
             return new Result<T>()
             {
@@ -50,7 +50,7 @@ namespace DotNetTrainingBatch5.PointOfSale.Domain
                 Type = EnumRespType.ValidationError,
             };
         }
-        public static Result<T> SystemError(string message, T? data = default)
+        public static Result<T> SystemError(string message = "System Error Occur", T? data = default)
         {
             return new Result<T>()
             {
@@ -60,7 +60,7 @@ namespace DotNetTrainingBatch5.PointOfSale.Domain
                 Type = EnumRespType.SystemError,
             };
         }
-        public static Result<T> Error(string message = "Some ErrorOccured", T? data = default)
+        public static Result<T> Error(string message = "Some Error Occured", T? data = default)
         {
             return new Result<T>()
             {

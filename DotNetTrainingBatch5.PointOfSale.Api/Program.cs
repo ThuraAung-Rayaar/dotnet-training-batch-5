@@ -13,7 +13,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 
-// Add services to the container.
+/*// Add services to the container.
 string connectionString = builder.Configuration.GetConnectionString("DbConnection")!;
 
 builder.Services.AddDbContext<AppDbContext>(opt =>
@@ -25,10 +25,19 @@ ServiceLifetime.Transient
 
 );
 
+builder.Services.AddScoped<ProductService>();*/
+
+
+
+string Connection = builder.Configuration.GetConnectionString("DbConnection");
+
+builder.Services.AddDbContext<POSDbContext>(
+                         option => option.UseSqlServer(Connection)
+                        ,ServiceLifetime.Transient,ServiceLifetime.Transient
+                        );
+
 builder.Services.AddScoped<ProductService>();
-
-
-
+builder.Services.AddScoped<ProductCategoryService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

@@ -1,7 +1,7 @@
 ﻿using DotNetTrainingBatch5.PointOfSale.DataBase.Models;
 using DotNetTrainingBatch5.PointOfSale.Domain;
 using DotNetTrainingBatch5.PointOfSale.Domain.Models.Product;
-using DotNetTrainingBatch5.PointOfSale.Domain.Models.Sale;
+
 using DotNetTrainingBatch5.PointOfSale.Domain.Models.SaleDetail;
 using Microsoft.EntityFrameworkCore;
 using System;

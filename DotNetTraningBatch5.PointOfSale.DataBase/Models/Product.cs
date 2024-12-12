@@ -15,7 +15,7 @@ public partial class Product
 
     public string ProductCategoryCode { get; set; } = null!;
 
-    public bool? DeleteFlag { get; set; }
+    public bool DeleteFlag { get; set; } = false;
 
     public virtual ProductCategory ProductCategoryCodeNavigation { get; set; } = null!;
 }
