@@ -11,7 +11,7 @@ public partial class SaleDetail
 
     public string ProductCode { get; set; } = null!;
 
-    public string Quantity { get; set; } = null!;
+    public int Quantity { get; set; } = 0;
 
-    public decimal? Price { get; set; }
+    public decimal Price { get; set; } = 0M;
 }

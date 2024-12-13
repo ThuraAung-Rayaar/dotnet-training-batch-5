@@ -1,5 +1,6 @@
 using DotNetTrainingBatch5.PointOfSale.DataBase.Models;
 using DotNetTrainingBatch5.PointOfSale.Domain.Features.Products;
+using DotNetTrainingBatch5.PointOfSale.Domain.Features.Sales;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -32,12 +33,15 @@ builder.Services.AddScoped<ProductService>();*/
 string Connection = builder.Configuration.GetConnectionString("DbConnection");
 
 builder.Services.AddDbContext<POSDbContext>(
-                         option => option.UseSqlServer(Connection)
+                         option => option.UseSqlServer(Connection, b => b.MigrationsAssembly("DotNetTrainingBatch5.PointOfSale.Api"))
                         ,ServiceLifetime.Transient,ServiceLifetime.Transient
                         );
 
 builder.Services.AddScoped<ProductService>();
 builder.Services.AddScoped<ProductCategoryService>();
+builder.Services.AddScoped<SaleService>();
+builder.Services.AddScoped<SaleDetailServices>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

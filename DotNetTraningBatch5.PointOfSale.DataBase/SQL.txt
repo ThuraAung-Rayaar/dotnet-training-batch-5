@@ -71,7 +71,7 @@ CREATE TABLE [dbo].[SaleDetails](
 	[SaleDetailId] [int] IDENTITY(1,1) NOT NULL,
 	[VoucherNo] [varchar](50) NOT NULL,
 	[ProductCode] [varchar](10) NOT NULL,
-	[Quantity] [varchar](50) NOT NULL,
+	[Quantity] [int] NOT NULL,
 	[Price] [decimal](10, 2) NULL,
  CONSTRAINT [PK__SaleDeta__70DB14FE03474087] PRIMARY KEY CLUSTERED 
 (

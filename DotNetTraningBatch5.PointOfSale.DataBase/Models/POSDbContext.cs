@@ -14,7 +14,13 @@ public partial class POSDbContext : DbContext
         : base(options)
     {
     }
-
+   /* protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        if (!optionsBuilder.IsConfigured)
+        {
+            optionsBuilder.UseSqlServer("YourConnectionString", b => b.MigrationsAssembly("DotNetTrainingBatch5.PointOfSale.Api"));
+        }
+    }*/
     public virtual DbSet<Product> Products { get; set; }
 
     public virtual DbSet<ProductCategory> ProductCategories { get; set; }
