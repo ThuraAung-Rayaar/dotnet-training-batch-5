@@ -84,6 +84,9 @@ public partial class POSDbContext : DbContext
             entity.Property(e => e.VoucherNo)
                 .HasMaxLength(50)
                 .IsUnicode(false);
+
+            entity.Property(e => e.RowVersion).IsConcurrencyToken().ValueGeneratedOnAddOrUpdate();// adding for row version
+
         });
 
         modelBuilder.Entity<SaleDetail>(entity =>

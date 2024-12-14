@@ -308,31 +308,36 @@ public class SaleDetailServices
         _db = db;
     }
 
-    public async Task<Result<DetailResponseModel>> GetSaleByCodeAsync(string code)
+    public async Task<Result<List<DetailResponseModel>>> GetSaleByCodeAsync(string code)
     {
         
-        var sale = await _db.SaleDetails.AsNoTracking().Where(s => s.VoucherNo == code || s.ProductCode == code).FirstOrDefaultAsync();
+        var sale = await _db.SaleDetails.AsNoTracking().Where(s => s.VoucherNo == code || s.ProductCode == code).ToListAsync();
 
         if (sale is null)
         {
 
-            return Result<DetailResponseModel>.NotFoundError("Sale Not Found!");
+            return Result<List<DetailResponseModel>>.NotFoundError("Sale Not Found!");
 
         }
 
-        //Result<SaleResponseModel> response = new Result<SaleResponseModel>();
+        List<DetailResponseModel> saleRes = new List<DetailResponseModel>();
 
         //TODO: also grab the associated sale details and products
-        DetailResponseModel model = new DetailResponseModel
+        foreach (var item in sale)
         {
-           ProductCode = sale.ProductCode,
-           VoucherNo = sale.VoucherNo,
-           Price = sale.Price,
-           Quantity = sale.Quantity
+            DetailResponseModel model = new DetailResponseModel
+            {
+                ProductCode = item.ProductCode,
+                VoucherNo = item.VoucherNo,
+                Price = item.Price,
+                Quantity = item.Quantity
 
-        };
+            };
 
-        return Result<DetailResponseModel>.Success(model);
+            saleRes.Add(model);
+        }
+
+        return Result<List<DetailResponseModel>>.Success(saleRes);
 
 
     }
@@ -374,82 +379,101 @@ public class SaleDetailServices
     public async Task<Result<DetailResponseModel>> CreateSaleDetail(DetailRequestModel detail) {
         //after first product sell and obtaining voucherNo the parameter is to be added
 
+        // using transaction
+        using var transaction = await _db.Database.BeginTransactionAsync();//using transaction to solve consurrency issue
+        var saleTable = _db.Sales;
 
         #region IF  New Sale Occur 
 
         string pattern = @"^V\d{3}$";//to follow V000 standard
-        if (detail.VoucherNo.IsNullOrEmpty()|| Regex.IsMatch(detail.VoucherNo, pattern))
+
+
+        if (!detail.VoucherNo.IsNullOrEmpty())
         {
-           
-            
-                var  code = await _db.Sales.AsNoTracking().MaxAsync(x => x.VoucherNo);
-                if (code.IsNullOrEmpty()) { return Result<DetailResponseModel>.ValidationError();  }
-                code = code.IncrementCode();
-                detail.VoucherNo = code;
-
-                Sale ss = new Sale { 
-
-                VoucherNo=detail.VoucherNo
-                ,SaleDate = DateTime.Now
-                };
-            _db.Entry(code).State = EntityState.Modified;
-                _db.Sales.Add(ss);
-            if (await _db.SaveChangesAsync() == 0) return Result<DetailResponseModel>.SystemError();
-
-
-
+            if (Regex.IsMatch(detail.VoucherNo, pattern))
+                return Result<DetailResponseModel>.InvalidDataError("Voucher Not VAlid");
 
         }
-        else return Result<DetailResponseModel>.InvalidDataError("Voucher Not VAlid");
+
+
+
+        //if null or empty
+        else {
+
+            // calling data table from sale table only one time
+            var code = await saleTable.MaxAsync(x => x.VoucherNo);
+            //var code = await _db.Sales.AsNoTracking().MaxAsync(x => x.VoucherNo);
+
+            detail.VoucherNo = code.IsNullOrEmpty() ? "V001" : code.IncrementCode();
+
+            Sale ss = new Sale
+            {
+
+                VoucherNo = detail.VoucherNo
+            ,
+                SaleDate = DateTime.Now
+            };
+            //_db.Entry(code).State = EntityState.Modified;
+            _db.Sales.Add(ss);
+            if (await _db.SaveChangesAsync() == 0) return Result<DetailResponseModel>.SystemError();
+        }
         #endregion
 
-//Concurrency issue of adding sale and calling it back is occuring 
+        //Concurrency issue of adding sale and calling it back is occuring 
 
         #region Check Product to get Price
-        var productItem =await _db.Products.AsNoTracking().FirstOrDefaultAsync(x => x.ProductCode == detail.ProductCode);
+        var productItem = await _db.Products.AsNoTracking().FirstOrDefaultAsync(x => x.ProductCode == detail.ProductCode);
         if (productItem is null) { return Result<DetailResponseModel>.NotFoundError("Product Code Dont Exist in Products Table"); }
         #endregion
 
 
         #region Adding the saleDetail
         if (detail.Quantity <= 0) return Result<DetailResponseModel>.InvalidDataError("Quantity:  0");
-        SaleDetail saleDetail = new SaleDetail() { 
-        VoucherNo = detail.VoucherNo,
-        Price = productItem.Price,
-        Quantity = detail.Quantity,
-        ProductCode = detail.ProductCode
-        
+        SaleDetail saleDetail = new SaleDetail() {
+            VoucherNo = detail.VoucherNo,
+            Price = productItem.Price,
+            Quantity = detail.Quantity,
+            ProductCode = detail.ProductCode
+
         };
 
 
 
         await _db.SaleDetails.AddAsync(saleDetail);
-
-
-
-
-        int result = await _db.SaveChangesAsync();
-        if(result ==0) return Result<DetailResponseModel>.SystemError("Error saving SaleDetail");
+        //dont save the sale detail here***
+        //int result = await _db.SaveChangesAsync();
+        //if(result ==0) return Result<DetailResponseModel>.SystemError("Error saving SaleDetail");
         #endregion
 
 
         #region Update Sale
 
+        //use sale table
+        //var saleitem = await _db.Sales.AsNoTracking().FirstOrDefaultAsync(x => x.VoucherNo == saleDetail.VoucherNo);
+        var saleitem = await saleTable.FirstOrDefaultAsync(x => x.VoucherNo == saleDetail.VoucherNo);
+        if (saleitem is null) return Result<DetailResponseModel>.InvalidDataError($"Sale not found for  VoucherNo:{saleDetail.VoucherNo}");
 
-        var saleitem = await _db.Sales.AsNoTracking().FirstOrDefaultAsync(x => x.VoucherNo == saleDetail.VoucherNo);
-        if (saleitem is null) return Result<DetailResponseModel>.InvalidDataError();
         saleitem.SaleDate = DateTime.Now;
-        saleitem.TotalAmount += saleDetail.Quantity * saleDetail.Price;
-        _db.Entry(saleitem).State = EntityState.Modified;
-        int result2 = await _db.SaveChangesAsync();
+        saleitem.TotalAmount += saleDetail.Quantity * saleDetail.Price; 
+
+        //_db.Entry(saleitem).State = EntityState.Modified;
         
-        if (result2 == 0) return Result<DetailResponseModel>.SystemError("Error  Updating sale");
+        _db.Update(saleitem);
+
 
         #endregion
 
+        int result2 = await _db.SaveChangesAsync(); // saving the changes
 
-       
-            DetailResponseModel res = new DetailResponseModel()
+        if (result2 == 0) return Result<DetailResponseModel>.SystemError("Error  Updating sale");
+
+        ////now save changes to detail
+        //int result = await _db.SaveChangesAsync();
+        //if (result == 0) return Result<DetailResponseModel>.SystemError("Error saving SaleDetail");
+
+        await transaction.CommitAsync();
+
+        DetailResponseModel res = new DetailResponseModel()
             {
                 VoucherNo = saleDetail.VoucherNo,
                 Price = saleDetail.Price,
@@ -466,19 +490,7 @@ public class SaleDetailServices
 
     }
 
-    public async Task<int> UpdateSaleAsync(SaleDetail saleDetail)
-    {
-
-
-        var saleitem = await _db.Sales.AsNoTracking().FirstOrDefaultAsync(x => x.VoucherNo == saleDetail.VoucherNo);
-        if (saleitem is null) return 0;
-        saleitem.SaleDate = DateTime.Now;
-        saleitem.TotalAmount += saleDetail.Quantity * saleDetail.Price;
-        _db.Entry(saleitem).State = EntityState.Modified;
-       int result = await _db.SaveChangesAsync();
-
-        return result;
-    }
+    
 
 }
 

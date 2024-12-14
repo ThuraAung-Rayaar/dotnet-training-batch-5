@@ -126,8 +126,8 @@ public class ProductController : ControllerBase
         }
     }
 
-    [HttpGet("/Product/{id}")]
-    public async Task<IActionResult> GetProduct([FromQuery] string code)
+    [HttpGet("/Product/{code}")]
+    public async Task<IActionResult> GetProduct( string code)
     {
         try
         {
@@ -160,8 +160,8 @@ public class ProductController : ControllerBase
         }
     }
 
-    [HttpPatch("/Product/{id}")]
-    public async Task<IActionResult> EditProduct([FromQuery] string code,[FromBody] ProductReqModel reqModel)
+    [HttpPatch("/Product/{code}")]
+    public async Task<IActionResult> EditProduct( string code,[FromBody] ProductReqModel reqModel)
     {
         try
         {
@@ -175,8 +175,8 @@ public class ProductController : ControllerBase
         }
     }
 
-    [HttpDelete("/Product/{id}")]
-    public async Task<IActionResult> DeleteProduct([FromQuery] string code)
+    [HttpDelete("/Product/{code}")]
+    public async Task<IActionResult> DeleteProduct( string code)
     {
         try
         {

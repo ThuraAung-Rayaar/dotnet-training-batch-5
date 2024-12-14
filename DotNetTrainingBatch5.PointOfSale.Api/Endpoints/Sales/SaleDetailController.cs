@@ -11,20 +11,44 @@ namespace DotNetTrainingBatch5.PointOfSale.Api.Endpoints.Sales
     public class SaleDetailController : ControllerBase
     {
 
-        private readonly SaleDetailServices _Service2;
+        private readonly SaleDetailServices _Service;
         public SaleDetailController( SaleDetailServices service2)
         {
           
-            _Service2 = service2;
+            _Service = service2;
 
         }
 
-        [HttpGet("/Detail/")]
-        public async Task<IActionResult> GetAllSaleDetailAsync()
+        [HttpGet("/Detail/Voucher-Number={voucher}")]
+        public async Task<IActionResult> GetSaleDetailByVoucherAsync([FromQuery] string voucher)
         {
             try
             {
-                var result = await _Service2.GetSaleDetailAsync();
+                voucher= voucher.ToUpper();
+                var result = await _Service.GetSaleByCodeAsync(voucher);
+
+                return Ok(result);
+            }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+
+
+
+        }
+
+        [HttpGet("/Detail/Product-code={Product}")]
+        public async Task<IActionResult> GetSaleDetailByProductAsync(string Product)
+        {
+            try
+            {
+                Product= Product.ToUpper();
+                var result = await _Service.GetSaleByCodeAsync(Product);
 
                 return Ok(result);
             }
@@ -42,12 +66,12 @@ namespace DotNetTrainingBatch5.PointOfSale.Api.Endpoints.Sales
         }
 
         [HttpPost("/Detail/")]
-        public async Task<IActionResult> CreateSaleDetail(DetailRequestModel detail)
+        public async Task<IActionResult> CreateSaleDetail( DetailRequestModel detail)
         {
             try
             {
                if(!detail.ProductCode.IsNullOrEmpty()) detail.ProductCode = detail.ProductCode.ToUpper();
-                var result = await _Service2.CreateSaleDetail(detail);
+                var result = await _Service.CreateSaleDetail(detail);
 
                 return Ok(result);
             }
